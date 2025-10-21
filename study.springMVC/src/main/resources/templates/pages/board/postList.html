@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/default}">
+<div layout:fragment="content">
+	<div>
+		<!-- 게시판 유형 위치할 1행 -->
+		<h5>자유게시판</h5>
+	</div>
+
+	<div id="app" v-cloak class="wrapper card-body">
+
+		<!-- 검색박스 위치할 2행 -->
+		<div class="container">
+			<div class="row">
+				<div class="searchBox col-sm-6">
+					<div class="row w-100">
+						<div class="col-sm-4">
+							<div>
+								<label for="searchkeyword"></label>
+							</div>
+							<div>
+								<select id="searchKeyword"
+									class="form-select form-select-sm mb-3" size="1"
+									aria-label="size 3 select example" required v-model="q.key">
+									<!-- 원본 옵션/값/기본 선택 유지 -->
+									<option value="0">--전체--</option>
+									<option value="1">작성자(ID)</option>
+									<!-- <option value="2">작성자(NM)</option> -->
+									<option value="3">글+내용</option>
+									<option value="4">글 제목</option>
+									<option value="5">내용</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-sm-8">
+							<div>
+								<label for="searchTerm"></label>
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<input type="text" class="form-control" placeholder="검색어 입력"
+									name="searchTerm" id="searchTerm" v-model.trim="q.term"
+									@keydown.enter.prevent="doSearch" /> <input type="button"
+									id="searchBtn" class="btn btn-outline-secondary" value="검색"
+									@click="doSearch" /> <input type="button" id="searchReset"
+									class="btn btn-outline-secondary" value="검색초기화"
+									@click="resetSearch" />
+								<div></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 글 등록버튼(상단) -->
+				<div class="col d-flex flex-row-reverse">
+					<div class="mb-3">
+						<div>
+							<label></label>
+						</div>
+						<input type="button"
+							class="id_insertPage btn btn-secondary btn-sm" value="등록"
+							@click="goInsert" />
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div>
+			<div class="container">
+				<div id="absoluteHeader" class="row">
+					<div class="col-sm-1 text-center">번호</div>
+					<div class="col-sm-5 text-left">제목</div>
+					<div class="col-sm-2 text-left">작성자</div>
+					<div class="col-sm-3 text-center">등록일자</div>
+					<div class="col-sm-1 text-center">비고</div>
+				</div>
+
+				<div v-for="(post, idx) in posts" :key="post.postId"
+					class="row row-hover py-2"
+					:class="idx % 2 === 0 ? 'row-even' : 'row-odd'"
+					@click="goDetail(post.postId)" style="cursor: pointer;">
+					<div class="col-sm-1 text-center">{{ idx + 1 }}</div>
+					<div class="col-sm-5 text-left">{{ post.postTitle }}</div>
+					<div class="col-sm-2 text-left">{{ post.userId }}</div>
+					<div class="col-sm-3 text-center kcy_rgst_datetime">{{
+						fn_toMonthDayTime(post.rgstDt) }}</div>
+					<div class="col-sm-1 text-center"></div>
+				</div>
+
+				<div v-if="posts.length === 0" class="row py-4">
+					<div class="col text-center text-muted">검색 결과가 없습니다.</div>
+				</div>
+			</div>
+
+			<!-- 글 등록버튼(하단) -->
+			<div class="container">
+				<div class="row">
+					<div class="col"></div>
+					<div class="col d-flex flex-row-reverse">
+						<div>
+							<div>
+								<label></label>
+							</div>
+							<input type="button"
+								class="id_insertPage btn btn-secondary btn-sm" value="등록"
+								@click="goInsert" />
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 페이지네이션 -->
+			<div>
+				<!-- 필요 시 서버 페이지네이션 연동 -->
+			</div>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+		const { createApp, ref } = Vue;
+		
+		createApp({
+			setup() {
+				const posts = ref(/*[[${postList}]]*/ []);
+				
+				const url = new URL(window.location.href);
+				const initialKey  = url.searchParams.get('key');
+				const initialTerm = url.searchParams.get('term');
+				
+				const q = ref({
+					key: initialKey ?? '0',
+					term: initialTerm ? decodeURIComponent(initialTerm) : ''
+				});
+				
+				const fn_toMonthDayTime = (str) => {
+					if(!str) return "";
+					
+					const date = new Date(str);
+					if(isNaN(date)) return "";
+					console.debug(String(date))
+					// "Tue Sep 23 13:02:25 KST 2025"
+					const parts = String(date).trim().split(/\s+/);
+					if (parts.length < 6) return "";
+					const monthMap = {
+						Jan:"01", Feb:"02", Mar:"03", Apr:"04", May:"05", Jun:"06",
+						Jul:"07", Aug:"08", Sep:"09", Oct:"10", Nov:"11", Dec:"12"
+					};
+					
+					console.debug(parts); //[ "Tue", "Oct", "14", "2025", "14:54:36", "GMT+0900", "(한국", "표준시)" ]
+					
+					const year = parts[3];
+					const month = monthMap[parts[1]];
+					const day   = parts[2].padStart(2, "0");
+					const [hh, mm] = parts[4].split(":"); // 초는 버림
+					
+					if (!month || !hh || !mm) return "";
+					return `${year}-${month}-${day} ${hh.padStart(2,"0")}:${mm.padStart(2,"0")}`;
+				};
+				
+				const goInsert = () => {
+					const boardCate = 'forum';
+					window.location.href = `/board/${boardCate}/post/insert`;
+				};
+				
+				const goDetail = (postId) => {
+					window.location.href = `/board/forum/post?postId=${encodeURIComponent(postId)}`;
+				};
+				
+				const doSearch = () => {
+					const key  = q.value.key ?? '';
+					const term = q.value.term ?? '';
+					const u = new URL(window.location.href);
+					u.pathname = '/board/forum/list';
+					u.search = '';
+					u.searchParams.set('key', key);
+					u.searchParams.set('term', term);
+					window.location.href = u.toString();
+				};
+				
+				const resetSearch = () => {
+					window.location.href = '/board/forum/list';
+				};
+				
+				return { 
+					posts, q
+					, fn_toMonthDayTime
+					, goInsert
+					, goDetail
+					, doSearch
+					, resetSearch 
+				};
+			}
+		}).mount('#app');
+	</script>
+
+	<style>
+	.row-hover:hover {
+		background-color: rgba(0, 0, 0, .03);
+	}
+	.row-odd {
+		background-color: #fff;
+	}
+	.row-even {
+		background-color: #fafafa;
+	}
+	</style>
+</div>
+</html>

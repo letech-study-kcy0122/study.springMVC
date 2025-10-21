@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default}">
+<div layout:fragment="content">
+<link rel="stylesheet" href="/css/styleUser.css" />
+	<div>
+		<h5>신규 사용자 등록</h5>
+	</div>
+	<div class="user-writer card shadow-sm card"
+		 id="app" th:attr="data-initial-img=${userProfileImgSrc}" v-cloak>
+		<div class="card-body container w-75">
+		<form id="userInfo" method="POST" enctype="multipart/form-data">
+			<div class="form-attr gap-4">
+				<div class="form-label text-end">
+					<label class="form-label" for="userId">*사용자 ID: </label>
+				</div>
+				<div class="">
+					<input type="text" id="userId" name="userId" class="form-control" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userPw">*사용자 PW: </label>
+				</div>
+				<div class="">
+					<input type="password" id="userPw" name="userPw" class="form-control" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userNm">*사용자 이름: </label>
+				</div>
+				<div class="">
+					<input type="text" id="userNm" name="userNm" class="form-control" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="regno1">사용자 주민번호: </label>
+				</div>
+				<div class="">
+					<input type="number" id="regno1" name="regno1" class="form-control" />
+					&nbsp;-&nbsp;
+					<input type="number" id="regno2" name="regno2" class="form-control" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userProfileImg">프로필 사진: </label>
+				</div>
+				
+				<div>
+					<div>
+						<img class="image-preview" id="previewImg" :src="previewSrc" />
+					</div>
+					<input type="file" id="userProfileImg" name="userProfileImg" class="form-control" accept=".jpg,.png,.webp" @change="fn_onFileChange" />
+				</div>
+			</div>
+			
+	
+			<div class="form-attr gap-4">
+			    <div class="form-label text-end">
+			    	<label class="form-label">사용자 권한: </label>
+			    </div>
+		    	<label th:each="commonCode : ${cmmnCodeList}">
+		    		<input th:value="${commonCode.cmmnCd}" type="checkbox" name="userRoles" class="inputUserRole" />
+		    		[[${commonCode.cmmnNm}]]
+		    	</label>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userNm"></label>
+				</div>
+				<div class="btn-group" role="user-insert-group" aria-label="Basic example">
+					<input type="submit" class="btn btn-sm btn-outline-primary" value="등록" />
+					<input type="reset"  class="btn btn-sm btn-outline-secondary" value="초기화" />
+					<input type="button" class="btn btn-sm btn-outline-danger" value="취소" onclick="fn_cancle"/>
+				</div>
+			</div>
+		</form>
+		</div>
+	</div>
+	<script th:inline="javascript">
+		const { createApp } = Vue;
+		
+		createApp({
+			data() {
+				return {
+					root: null
+					, userProfileImgSrc: /*[[${userProfileImgSrc}]]*/ ""
+					, previewSrc: "/img/blank.png"
+				};
+			},
+			
+			created() {
+				if (this.userProfileImgSrc) {
+					this.previewSrc = this.userProfileImgSrc;
+				}
+			},
+			
+			mounted() {
+				console.debug("userProfileImgSrc = ", this.userProfileImgSrc);
+				const el = document.getElementById("app");
+				const initial = el?.dataset?.initialImg || "";
+				if (initial) this.previewSrc = initial;
+			},
+			
+			methods: {
+				fn_onFileChange(event) {
+					const file = event?.target?.files && event.target.files[0];
+					if (!file) return;
+					
+					const reader = new FileReader();
+					reader.onload = e => {
+						this.previewSrc = e.target.result;
+					};
+					reader.readAsDataURL(file);
+				}
+				
+				, fn_cancle() {
+					const form = document.getElementById("userInfo");
+					form?.reset();
+					
+					const el = document.getElementById("app");
+					this.previewSrc = el?.dataset?.initialImg || "";
+					
+					window.location.href = "/cmmn/user/list";
+				}
+			}
+		}).mount("#app");
+	</script>
+</div>
+</html>

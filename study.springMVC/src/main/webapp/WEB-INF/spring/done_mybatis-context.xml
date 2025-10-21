@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+						http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
+	
+	<mybatis:scan base-package="kr.letech.study" annotation="org.apache.ibatis.annotations.Mapper" /> 
+    
+    <!-- MapperScannerConfigurer 사용 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	   <property name="basePackage" value="kr.letech.study" />
+	   <property name="annotationClass" value="org.apache.ibatis.annotations.Mapper" />
+	</bean>
+	
+	<!-- 
+		Spring Boot의 자동 설정 기능을 활용하면
+		Bean 등록을 따로 하지 않아도 된다.
+		
+		나는 이미 :mybatis로 자동 설정을 해놓은 상태다.
+		매퍼 스캔을 Boot에서는 어떻게 설정하나??
+	 -->
+</beans>

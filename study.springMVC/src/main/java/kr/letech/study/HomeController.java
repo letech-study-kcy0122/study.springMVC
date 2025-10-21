@@ -1,0 +1,57 @@
+package kr.letech.study;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import kr.letech.study.cmmn.app.service.HelloService;
+import kr.letech.study.cmmn.sec.annotation.CurrentUser;
+import kr.letech.study.cmmn.sec.vo.UserDetailsVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Handles requests for the application home page.
+ */
+@Controller
+@Slf4j
+public class HomeController {
+	
+	@Autowired
+	private HelloService helloService;
+	
+	/**
+	 * Simply selects the home view to render by returning its name.
+	 */
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public String home(
+			Locale locale
+			, Model model
+			, @CurrentUser UserDetailsVO user
+		) {
+		
+		String username = null;
+		if(user != null) {
+			username = user.getUsername();
+		}
+		
+		Date date = new Date();
+		//DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, locale);
+		//String formattedDate = dateFormat.format(date);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		String formattedDate = sdf.format(date);
+		
+		model.addAttribute("username", username);
+		model.addAttribute("serverTime", formattedDate );
+		log.info("■ ----- username: {}", username);
+		log.info(helloService.hello());
+		log.info("serverTime: {}", formattedDate);
+		return "pages/home";
+	}
+	
+}

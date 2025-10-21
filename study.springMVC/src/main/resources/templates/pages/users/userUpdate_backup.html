@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default}">
+
+<div layout:fragment="content">
+	<link rel="stylesheet" href="/css/styleUser.css" />
+
+
+	<div>
+		<h5>사용자 정보 수정</h5>
+	</div>
+	<div class="user-writer card shadow-sm card"
+		id="app" th:attr="data-initial-img=${userProfileImgSrc}" v-cloak>
+		<div class="card-body container w-75">
+		<form method="POST" action="/cmmn/user/update" enctype="multipart/form-data"
+			@submit.prevent="fn_submit"
+			@reset.prevent="fn_reset"
+			>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end">
+					<label class="form-label" for="userId">*사용자 ID: </label>
+					<input id="inputUserId" type="hidden" name="userId" th:value="${user.userId }" />
+				</div>
+				<div>
+					<input type="text" th:value="${user.userId }" class="form-control" readonly disabled />
+				</div>
+			</div>
+			<!-- 비밀번호 변경 섹션 -->
+			<div class="form-attr gap-4">
+				<div class="form-label text-end">
+					<label class="form-label">*사용자 PW:</label>
+				</div>
+				
+				<div class="d-flex flex-column gap-2" style="min-height: 50px">
+					<!-- 토글 영역 -->
+					<div v-if="!pwStepOpen" class="d-flex align-items-center gap-2">
+						<button type="button" class="btn btn-sm btn-outline-secondary" @click="openPwStep">비밀번호 변경</button>
+						<small class="text-muted">변경하지 않으면 공란으로 두세요.</small>
+						<input id="inputUserId" type="hidden" name="userPw" value="" />
+					</div>
+				
+					<!-- 1단계: 현재 비밀번호 확인 (UI만, 실제 검증 API 없음) -->
+					<div v-if="pwStepOpen && pwStep === 1" class="d-flex flex-column" style="width: 500px">
+						<div class="d-flex gap-2">
+							<input id="inputUserId" type="hidden" name="userPw" value="" />
+							<input
+							type="password"
+							class="form-control"
+							v-model="currentPw"
+							placeholder="현재 비밀번호"
+							style="max-width: 280px"
+							autocomplete="current-password"
+							/>
+							<input type="button" class="btn btn-sm btn-outline-secondary" value="취소" @click="cancelPw" />
+							<input type="button" class="btn btn-sm btn-primary" value="확인" @click="confirmPwStep" />
+					    </div>
+						    <div class="d-flex">
+						<p class="card-text h-3" id="pwCheckMsg"
+						:class="pwIsValid === false ?  'text-danger' : ''" 
+						>
+						  {{ pwCheckMsg }}
+						</p>
+						</div>
+					</div>
+				
+				  <!-- 2단계: 신규 비밀번호 입력 -->
+					<div v-if="pwStepOpen && pwStep === 2" class="d-flex align-items-start gap-2 flex-wrap">
+						<div class="d-flex align-items-center gap-2">
+							<input
+							  type="password"
+							  id="userPw"
+							  name="userPw"
+							  class="form-control"
+							  v-model="userPw"
+							  placeholder="* 신규 비밀번호 (6자 이상)"
+							  style="max-width: 280px"
+							  autocomplete="new-password"
+							/>
+							<input
+							  type="password"
+							  id="userPw_re"
+							  name="userPw_re"
+							  class="form-control"
+							  v-model="userPwRe"
+							  placeholder="* 비밀번호 확인"
+							  style="max-width: 280px"
+							  autocomplete="new-password"
+							/>
+						</div>
+						<input type="button" class="btn btn-sm btn-outline-secondary" value="취소" @click="cancelPw" />
+						<div class="">
+						  <small v-if="pwError" class="text-danger">{{ pwError }}</small>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userNm">*사용자 이름: </label>
+				</div>
+				<div>
+					<input type="text" id="userNm" name="userNm" class="form-control" th:value="${user.userNm }" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="regno1">사용자 주민번호: </label>
+				</div>
+				<div>
+					<input type="number" id="regno1" name="regno1" class="form-control" th:value="${user.regno1 }" />
+					&nbsp;-&nbsp;
+					<input type="number" id="regno2" name="regno2" class="form-control" th:value="${user.regno2 }" />
+				</div>
+			</div>
+			
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userProfileImg">프로필 사진: </label>
+					<!-- <input type="button" id="deleteProfileImg" class="btn btn-sm btn-outline-dark" value="이미지 삭제" @click="fn_deleteProfileImg" /> -->
+				</div>
+				<div>
+					<div>
+						<img class="image-preview" id="previewImg" :src="previewSrc" ref="previewImgEl"/>
+					</div>
+					<div>
+						<input type="file" id="userProfileImg" name="userProfileImg" class="form-control" accept=".jpg,.png,.webp" @change="fn_onFileChange" ref="fileInputEl"/>
+					</div>
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+			    <div class="form-label text-end">
+			    	<label class="form-label">사용자 권한: </label>
+			    </div>
+				<div class="roles">
+					<!-- 서버 사이드 렌더: 목록 생성 + 초기 checked 보장 -->
+					<label th:each="code, stat : ${cmmnCodeList}" class="mr-3">
+						<input
+						type="checkbox"
+						name="userRoles"
+						v-model="selectedRoles"
+						th:value="${code.cmmnCd}"
+						/>
+						<span th:text="${code.cmmnNm}">권한명</span>
+					<!-- 마지막 구분자 예시: <span th:if="${!stat.last}"> / </span> -->
+					</label>
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userNm"></label>
+				</div>
+				<div class="btn-group" role="user-insert-group" aria-label="Basic example">
+					<input type="submit" class="btn btn-sm btn-outline-primary" value="수정" />
+					<input type="reset"  class="btn btn-sm btn-outline-secondary" value="초기화" />
+					<input type="button" class="btn btn-sm btn-outline-danger" value="취소" @click="fn_cancle"/>
+					<input type="button" id="deleteProfileImg" class="btn btn-sm btn-outline-dark" value="이미지 삭제" @click="fn_deleteProfileImg" />
+				</div>
+			</div>
+			<div class="form-attr gap-4">
+				<div class="form-label text-end ">
+					<label class="form-label" for="userNm"></label>
+				</div>
+				<div aria-label="Basic example" class="text-start">
+					<small class="text-muted">※이미지 삭제 시, 입력된 <span class="text-danger">수정사항은 저장되지 않습니다.</span></small>
+					<br />
+					<small class="text-muted">※꼭! 변경사항은 저장해주시기 바랍니다.</small>
+				</div>
+			</div>
+		</form>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+		const {createApp, ref, onMounted} = Vue;
+		
+		createApp({
+			setup() {
+				const root = ref(null);
+				const contextPath = '';
+				const user = ref(/*[[${user}]]*/{});
+				const userRoles = ref(/*[[${userRoles}]]*/[]);
+				const cmmnCodeList = ref(/*[[${cmmnCodeList}]]*/[]);
+				const userProfileImgSrc = ref(/*[[${userProfileImgSrc}]]*/'');
+				const username = ref(/*[[${username}]]*/'');
+				const selectedRoles = ref([...userRoles.value]);
+
+				const previewSrc = ref(userProfileImgSrc.value || '/img/blank.png');
+
+				// ====== 비밀번호 변경 2단계 상태 ======
+				const pwStepOpen = ref(false); // 토글 열림/닫힘
+				const pwStep = ref(1);         // 1: 현재 비번 확인, 2: 신규 입력
+				const currentPw = ref("");     // 현재 비밀번호 (UI만)
+				const userPw = ref("");        // 신규 비밀번호
+				const userPwRe = ref("");      // 신규 비밀번호 확인
+				const pwError = ref("");       // 간단 오류 메시지
+				const pwCheckMsg = ref("");
+				const pwIsValid = ref(null);
+
+				const previewImgEl = ref(null);
+				const fileInputEl = ref(null);
+				// 파일 미리보기
+				const fn_readImage = (e) => {
+					const files = e?.target?.files ?? fileInputEl.value?.files;
+					if (!files || !files[0]) return;
+					const reader = new FileReader();
+					reader.onload = ev => {
+						if (previewImgEl.value) previewImgEl.value.src = ev.target.result;
+					};
+				reader.readAsDataURL(files[0]);
+				};
+				
+				const fn_onFileChange = event => {
+					const file = event.target.files && event.target.files[0];
+					if(!file) return;
+					
+					const reader = new FileReader();
+					reader.onload = e => {
+						previewSrc.value = e.target.result;
+					};
+					reader.readAsDataURL(file);
+				};
+				
+				const fn_deleteProfileImg = () => {
+					if(confirm("프로필 이미지를 삭제하시겠습니까?\n작성중이었던 변경 사항을 잃게 됩니다...")) {
+						console.debug("등록된 프로필 이미지: ", userProfileImgSrc.value);
+						if(!userProfileImgSrc.value || userProfileImgSrc.value.includes('blank-image-placeholder')) {
+							alert("등록된 프로필 이미지가 없습니다.");
+							 return;
+						} else {
+							const userId = document.getElementById("inputUserId").value;
+							location.href = "/cmmn/user/delete/img?userId=" + encodeURIComponent(userId);			
+						}
+					}	
+				};
+				
+				const fn_cancle = () => {
+					if(document.referrer) {
+						location.href = document.referrer;
+					} else {
+						location.href = "/cmmn/user/list";
+					}
+				};
+				
+				const fn_toggleChangePassword = () => {
+				    if(divChangePassword.value && formSecondCheck.value) {
+						divChangePassword.value.style.display = "none";
+					    formSecondCheck.value.style.display = "block";
+				    }
+				};
+
+				const openPwStep = () => {
+					pwStepOpen.value = true;
+					pwStep.value = 1;
+					pwError.value = '';
+					currentPw.value = '';
+					userPw.value = '';
+					userPwRe.value = '';
+				}
+				const cancelPw = () => {
+					pwStepOpen.value = false;
+					pwStep.value = 1;
+					pwError.value = '';
+					currentPw.value = '';
+					userPw.value = '';
+					userPwRe.value = '';
+				}
+				const confirmPwStep = async () => {
+					
+					let password = currentPw.value;
+					let userId = user.value.userId;
+					
+					const resp = await axios.post(
+						"http://localhost:8081/sec-management/users/pw-check"
+						, { password, userId }
+						, { params: {username: ''} }
+					);
+					const envelope = resp?.data ?? resp;
+					const data = envelope?.data ?? {};
+					const isValid = data?.isValid;
+					const msg = data?.msg;
+					pwCheckMsg.value = msg;
+				  	pwIsValid.value = isValid;
+				  	console.debug("pwCheckMsg: ", pwCheckMsg.value);
+					console.debug("password length: ", password.length);
+					console.debug("what is result:: ", data)
+					console.debug("how to get datas:: ", msg);
+					console.debug("how to get datas:: ", isValid);
+					
+					if (!isValid) {
+						pwError.value = '현재 비밀번호가 일치하지 않습니다.';
+					  return;
+					}
+					
+					pwError.value = '';
+					pwStep.value = 2;
+				}
+				
+				const fn_submit = event => {
+					// 비밀번호 변경을 진행 중인 경우(2단계) 간단 검증
+					if (pwStepOpen.value && pwStep.value === 2) {
+						if (String(userPw.value).trim().length > 0) {
+							if (String(userPw.value).trim().length < 6) {
+							  pwError.value = "비밀번호는 6자 이상이어야 합니다.";
+							  return;
+							}
+							if (userPw.value !== userPwRe.value) {
+							  pwError.value = "비밀번호가 일치하지 않습니다.";
+							  return;
+							}
+						} else {
+							// 2단계인데 비밀번호를 비워둔 경우: 변경 취소로 간주
+							// 필요 시 강제 에러 처리 대신 조용히 닫아도 됨
+							cancelPw();
+							if(confirm("비밀번호는 변경하지 않으시겠습니까?")) {
+								canclePw();
+							} else {
+								pwCheckMsg.value = "다시 인증해주시길 바랍니다. ^0^";
+								pwStep.value = 1;
+								return;
+							}
+						}
+					}
+					// 검증 통과: 실제 submit
+					event.target.closest("form").submit();
+				}
+				
+				const fn_reset = event => {
+					event.target.reset();
+					selectedRoles.value = [...userRoles.value];
+					
+					userPw.value = '';
+					userPwRe.value = '';
+					pwError.value = '';
+					pwCheckMsg.value = '';
+					previewSrc.value = userProfileImgSrc.value || '/img/blank.png';
+				};
+				
+				onMounted(() => {
+
+				});
+				
+				return {
+					root
+					, user
+					, userRoles
+					, cmmnCodeList
+					, userProfileImgSrc
+					, username
+					, previewSrc
+					
+					, selectedRoles
+					
+					, previewImgEl
+					, fileInputEl
+
+					, fn_readImage
+					, fn_onFileChange
+					, fn_deleteProfileImg
+					, fn_cancle
+					, fn_toggleChangePassword
+					
+			        , pwStepOpen, pwStep, currentPw, userPw, userPwRe, pwError,
+			        openPwStep, cancelPw, confirmPwStep
+			        , pwCheckMsg
+			        , pwIsValid
+			        , fn_submit
+			        , fn_reset
+				}
+			}
+		}).mount("#app");
+	</script>
+</div>
+</html>

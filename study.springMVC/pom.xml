@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<!-- Spring Boot Parent POM -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.7.18</version>
+		<relativePath />
+	</parent>
+	<!-- 플러그인 받을 때 POM 을 상속받아야 했을지도.
+	-->
+	
+	<!-- Project Meta -->
+	<groupId>kr.letech</groupId>
+	<artifactId>study</artifactId>
+	<name>study.springMVC</name>
+	<packaging>war</packaging>
+	<version>1.0.0-BUILD-SNAPSHOT</version>
+	
+	<!-- Version Properties -->
+	<properties>
+		<java-version>1.8</java-version>
+		<spring.springboot.starter-version>2.7.18</spring.springboot.starter-version>
+		<org.springframework-security-version>5.8.1</org.springframework-security-version>
+		<org.springframework-version>5.3.25</org.springframework-version>
+		<org.apache.tiles-version>3.0.3</org.apache.tiles-version>
+		<org.aspectj-version>1.6.10</org.aspectj-version>
+		<org.slf4j-version>1.6.6</org.slf4j-version>
+	</properties>
+
+	<!-- Dependencies -->
+	<dependencies>
+		<!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${org.springframework-version}</version>
+			<exclusions>
+				<!-- Exclude Commons Logging in favor of SLF4j -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<!-- Spring Boot -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+			<version>2.7.18</version>
+		</dependency>
+		
+<!-- Spring Boot Starter Web 
+	  - spring-boot-starter
+	    - spring-boot-starter-logging
+	  - spring-boot-starter-tomcat (내장 tomcat ==> 서블릿 컨테이너.)
+	  	- spring-boot-starter-core
+	  	- spring-boot-starter-el
+	  	- spring-boot-starter-websocket
+	  - hibernate-validator
+	  - jackson-databind
+	  - spring-web
+	  - spring-webmvc
+-->		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-web</artifactId>
+		    <version>2.7.18</version>
+		</dependency>
+<!-- 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency> -->
+
+
+<!-- Tomcat Embed Jasper
+	"내장 Tomcat이 javax.servlet API를 사용할 수 있게 자리를 만들어놓음."
+		- spring-boot-starter-tomcat
+			- org.apache.tomcat.embed: 
+				- tomcat-embed-core => servlet-api 포함됨.
+		
+				+ tomcat-embed-jasper => jsp-api 추가를 위해 필요
+		+JSTL 의존성도 직접 추가 필요
+-->		<dependency>
+		    <groupId>org.apache.tomcat.embed</groupId>
+		    <artifactId>tomcat-embed-jasper</artifactId>
+		    <version>9.0.83</version>
+		</dependency>
+		<!-- Servlet
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		-->
+<!-- 		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>jsp-api</artifactId>
+			<version>2.1</version>
+			<scope>provided</scope>
+		</dependency> -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+		</dependency>
+		
+		
+<!-- Spring Boot Starter AOP
+		- spring-aop
+		- aspectjweaver
+		- spring-boot-starter
+		
+		"spring-aop는 aspectJ의 어노테이션 문법을 따라한다. (e.g., @Aspect)
+		 aspectJ Runtime을 포함하고 있진 않음.
+		 그것까지 끌어다 놓은 spring-boot-starter-aop"
+		 => aspectweaver (런타임 위빙 처리, 프록시 생성 시 필요)
+		 => aspectjrt (AspectJ 실행에 필요한 공통 클래스 지원)
+-->		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-aop</artifactId>
+		    <version>2.7.18</version>
+		</dependency>
+		<!-- AspectJ Runtime
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>${org.aspectj-version}</version>
+		</dependency>
+		-->
+
+<!-- Tiles 
+		<dependency>
+			<groupId>org.apache.tiles</groupId>
+			<artifactId>tiles-core</artifactId>
+			<version>${org.apache.tiles-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tiles</groupId>
+			<artifactId>tiles-servlet</artifactId>
+			<version>${org.apache.tiles-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tiles</groupId>
+			<artifactId>tiles-jsp</artifactId>
+			<version>${org.apache.tiles-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tiles</groupId>
+			<artifactId>tiles-extras</artifactId>
+			<version>${org.apache.tiles-version}</version>
+		</dependency> -->
+		
+<!-- Spring Boot Starter Thymeleaf -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+		    <version>2.7.18</version>
+		</dependency>
+		<dependency>
+		    <groupId>nz.net.ultraq.thymeleaf</groupId>
+		    <artifactId>thymeleaf-layout-dialect</artifactId>
+		    <version>3.0.0</version>
+		</dependency>				
+		<dependency>
+		    <groupId>org.thymeleaf.extras</groupId>
+		    <artifactId>thymeleaf-extras-springsecurity5</artifactId>
+		    <version>3.0.5.RELEASE</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.thymeleaf.extras</groupId>
+		    <artifactId>thymeleaf-extras-java8time</artifactId>
+		    <version>3.0.4.RELEASE</version>
+		</dependency>
+		
+		<!-- Logging : spring-boot-starter 안에 포함되어 있다. Slf4j를 표준 인터페이스로 삼고 Logback을 기본 구현체로 세팅 
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${org.slf4j-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${org.slf4j-version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${org.slf4j-version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.15</version>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.mail</groupId>
+					<artifactId>mail</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.jms</groupId>
+					<artifactId>jms</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sun.jdmk</groupId>
+					<artifactId>jmxtools</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sun.jmx</groupId>
+					<artifactId>jmxri</artifactId>
+				</exclusion>
+			</exclusions>
+			<scope>runtime</scope>
+		</dependency>
+		-->
+		<!-- @Inject : @Autowired와 혼용, 제거
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+			<version>1</version>
+		</dependency>
+		-->
+		
+
+<!-- Test : Spring Boot는 JUnit5를 이미 제공하고 있다.
+		- spring-boot-starter-test
+		
+		"하지만 JUnit4 환경을 유지하려면 vintage-engine을 추가할 수 있다."
+-->		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-test</artifactId>
+		    <version>2.7.18</version>
+		    <scope>test</scope>
+		</dependency>
+		<!-- <dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.7</version>
+			<scope>test</scope>
+		</dependency> -->
+
+
+<!--  Spring Boot Starter JDBC [2.7.18]
+		- spring-jdbc
+		- HikariCP (; Boot가 자동 감지(.properties)해서 datasource를 직접 설정하고 생성해주는 + ConnectionPool 관리하는 라이브러리)
+		- spring-tx (@Transactional)
+		- spring-boot-starter
+		- spring-core / spring-beans / spring-context
+		
+		+ 각 DB별 JDBC 드라이버(mariadb-java-client)
+		+ Mybatis (; ORM/Mapper 프레임워크 => mybatis-spring-boot-starter)
+		+ JPA/Hibernate (; => spring-boot-starter-data-jpa)
+--> 	<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		    <!-- <version>${spring.springboot.starter-version}</version> -->
+		</dependency>
+		<!-- MariaDB JDBC Driver -->
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<version>3.1.2</version>
+		</dependency>
+		<!-- Mybatis Spring Boot Starter 2.3 -->
+		<dependency>
+		    <groupId>org.mybatis.spring.boot</groupId>
+		    <artifactId>mybatis-spring-boot-starter</artifactId>
+		    <version>2.3.2</version>
+		</dependency>
+		<!-- JdbcTemplate와 같은 편의성 API 제공
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency>
+		-->
+		<!-- MyBatis의 핵심 엔진. SQL 매퍼 실행, 캐시. 동적SQL 처리
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.5.11</version>
+		</dependency>
+		-->
+		<!-- Spring Framework와 MyBatis 연결 (SqlSessionFactory, @MapperScan, ...)
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-spring</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		-->
+		<!-- https://mvnrepository.com/artifact/org.bgee.log4jdbc-log4j2/log4jdbc-log4j2-jdbc4 
+			<artifactId>log4jdbc-log4j2-jdbc4</artifactId> -->
+		<dependency>
+			<groupId>org.bgee.log4jdbc-log4j2</groupId>
+			<artifactId>log4jdbc-log4j2-jdbc4.1</artifactId>
+			<version>1.16</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-typehandlers-jsr310</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+
+
+<!-- Spring Boot Starter Security [2.7.18]
+		- spring-security-config
+		- spring-security-core
+		- spring-security-web
+		- spring-security-crypto
+		- spring-security-text
+		- spring-boot-starter
+-->		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-security</artifactId>
+		    <!-- <version>${spring.springboot.starter-version}</version> -->
+		</dependency>
+		<!-- FilterChainProxy, CSRF, FormLogin 관련된 웹 보안 필터
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${org.springframework-security-version}</version>
+		</dependency>
+		-->
+		<!--  SecurityFilterChain, @EnableWebSecurity 등 설정용 DSL 제공
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${org.springframework-security-version}</version>
+		</dependency>
+		-->
+		<!-- UserDetailsService, PasswordEncoder 등 인증/인가 핵심 로직 제공
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+			<version>${org.springframework-security-version}</version>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
+		    <!-- <version>5.7.11</version> -->
+		</dependency>
+
+
+		<!-- 외부 라이브러리들.. -->
+		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		    <version>1.18.30</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Commons IO -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+		<!-- Commons Lang -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.18.0</version>
+		</dependency>
+
+		<!-- Jackson 3총사는 spring-boot-starter-web 안의 **-json 안에 포함되어 있음.
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+		
+		-->
+
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+			    <groupId>org.springframework.boot</groupId>
+			    <artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+<!-- 			<plugin>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+					<additionalProjectnatures>
+						<projectnature>org.springframework.ide.eclipse.core.springnature
+						</projectnature>
+					</additionalProjectnatures>
+					<additionalBuildcommands>
+						<buildcommand>org.springframework.ide.eclipse.core.springbuilder
+						</buildcommand>
+					</additionalBuildcommands>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>true</downloadJavadocs>
+				</configuration>
+			</plugin> -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<compilerArgument>-Xlint:all</compilerArgument>
+					<showWarnings>true</showWarnings>
+					<showDeprecation>true</showDeprecation>
+				</configuration>
+			</plugin>
+<!-- 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<configuration>
+					<mainClass>org.test.int1.Main</mainClass>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.2.2</version>
+			</plugin> -->
+		</plugins>
+	</build>
+</project>

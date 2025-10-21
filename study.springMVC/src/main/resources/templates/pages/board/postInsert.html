@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/default}">
+<div layout:fragment="content">
+	<head>
+<meta charset="UTF-8" />
+<title>Insert title here</title>
+	</head>
+
+	<h3 class="mb-3">자유게시글 작성</h3>
+
+	<div id="app" v-cloak class="post-writer card shadow-sm" style="text-align: start !important;">
+		<div class="card-body">
+			<div>
+				<!-- 검색박스 공간만큼 비워둘 2행 -->
+			</div>
+			<div>
+				<!-- 게시글 작성 폼이 위치할 3행 -->
+				<div>
+					<!-- 글 등록버튼(상단) 만큼 비워둘 공간 -->
+				</div>
+
+				<div>
+					<!-- 게시글 목록 -->
+					<form id="postForm" ref="postFormEl" method="POST"
+						action="/board/post/insert" enctype="multipart/form-data">
+
+						<div class="mb-3 d-flex flex-row gap-3 align-items-center">
+							<div class="form-attr gap-4" style="padding-left: 45px">
+								<div class="d-flex flex-column gap-1">
+									<label for="boardCd" class="form-label text-subtitle">
+										게시판 선택: <select id="boardCd" name="boardCd"
+										class="form-select form-select-sm" required
+										v-model="form.boardCd">
+											<option value="AB010">자유</option>
+											<option value="AB020">유머</option>
+									</select>
+									</label>
+								</div>
+
+								<div class="d-flex flex-column gap-1">
+									<label class="form-label"
+										style="padding-left: 1.8em; margin-bottom: 0;">글 설정:</label>
+									<div class="d-flex flex-row">
+										<div class="form-check d-flex flex-column">
+											<label> <input type="checkbox" name="hiddenYn"
+												value="Y" style="" v-model="form.hiddenYn" /> 비공개
+											</label>
+										</div>
+										<div class="form-check d-flex flex-column">
+											<label> <input type="checkbox" name="cmtYn" value="Y"
+												style="" v-model="form.cmtYn" /> 댓글허용
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div>
+								<label for="postTitle" class="form-label text-end"
+									style="width: 80px;">제목: </label>
+							</div>
+							<input type="text" id="postTitle" name="postTitle"
+								class="form-control" v-model="form.postTitle" />
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div>
+								<label for="postContent" class="form-label text-end"
+									style="width: 80px;">내용: </label>
+							</div>
+							<textarea id="postContent" name="postContent"
+								class="form-control" rows="10" v-model="form.postContent"></textarea>
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div>
+								<label for="attachFiles" class="form-label text-end"
+									style="width: 80px;">첨부파일: </label>
+							</div>
+
+							<div class="d-flex flex-column gap-1 w-100">
+								<div>
+									<input type="button" id="fakeAttachFiles" value="파일추가"
+										class="btn btn-outline-warning btn-sm"
+										@click="fn_activateAttachFiles" />
+
+									<!-- 진짜 파일 입력은 숨김 -->
+									<input type="file" id="tempAttachFiles" ref="tempAttachInput"
+										@change="fn_addAttachFiles($event.target)" multiple hidden />
+								</div>
+
+								<div class="div-attach-file-list border rounded p-2 w-100"
+									id="divAttachFilesList" style="min-height: 40px;">
+									<ul class="ul-attach-file-list mb-0" id="ulAttachFilesList">
+										<li v-if="attachFiles.length === 0" class="text-muted">
+											선택된 파일이 없습니다.</li>
+
+										<li v-for="(f, idx) in attachFiles" :key="fileKey(f)"
+											class="d-flex justify-content-between align-items-center">
+											<span class="card-subtitle"> <i
+												class="ti ti-menu-2 fs-5"></i>&nbsp;{{ f.name }} ({{ f.size
+												}}Bytes)
+										</span> <input type="button" class="btn btn-sm btn-outline-danger"
+											value="삭제" @click="removeFile(idx)" />
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="text-right">
+							<!-- 글 등록버튼 -->
+							<input type="button" value="등록"
+								class="btn btn-sm btn-outline-secondary" @click="fn_submitPost" />
+							<input type="button" value="초기화"
+								class="btn btn-sm btn-outline-primary" @click="fn_resetPost" />
+						</div>
+					</form>
+
+					<div>
+						<!-- 페이지네이션 만큼 비워둘 공간 -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+    const { createApp, ref, reactive } = Vue;
+
+    createApp({
+		setup() {
+			// 원본 전역 변수들 대응
+			const postFormEl      = ref(null);
+			const tempAttachInput = ref(null);
+			const attachFiles     = ref([]);
+			
+			// 원본의 boardCd/postTitle/postContent + 체크박스 상태 보존
+			const form = reactive({
+				boardCd: 'AB010',
+				hiddenYn: false,
+				cmtYn: true,
+				postTitle: '',
+				postContent: ''
+			});
+		
+			// ===== 함수들: 원본 함수명/역할을 그대로 유지 =====
+			
+			// dedupe(arr[]) : 동일 파일 중복 제거
+			const dedupe = (arr) => {
+				const m = new Map();
+				arr.forEach(file => {
+					const key = `${file.name}_${file.size}_${file.lastModified}`;
+					m.set(key, file);
+				});
+				return Array.from(m.values());
+			};
+		
+			// renderList(): Vue에선 반응형이라 리스트 재렌더가 자동
+			const renderList = () => { /* no-op: 반응형으로 대체 */ };
+			
+			// fn_activateAttachFiles(): 가짜 버튼 누르면 진짜 input 클릭
+			const fn_activateAttachFiles = () => {
+				tempAttachInput.value?.click();
+			};
+		
+			// fn_addAttachFiles(input): 첨부파일 누적
+			const fn_addAttachFiles = (input) => {
+				const selected = Array.from(input.files || []);
+				attachFiles.value = dedupe([ ...attachFiles.value, ...selected ]);
+				renderList();
+				if (tempAttachInput.value) tempAttachInput.value.value = '';
+			};
+			
+			// 파일 키 생성(중복 방지)
+			const fileKey = (f) => `${f.name}_${f.size}_${f.lastModified}`;
+			
+			// 개별 삭제
+			const removeFile = (idx) => {
+				attachFiles.value.splice(idx, 1);
+				renderList();
+			};
+		
+			// fn_submitPost(): 폼 submit 대체
+			const fn_submitPost = async () => {
+				const fd = new FormData();
+				fd.append('boardCd', form.boardCd);
+				fd.append('postTitle', form.postTitle);
+				fd.append('postContent', form.postContent);
+				
+				// 체크박스는 값이 Y일 때만 전송하는 원형을 반영
+				if (form.hiddenYn) fd.append('hiddenYn', 'Y');
+				if (form.cmtYn)    fd.append('cmtYn', 'Y');
+				
+				attachFiles.value.forEach(f => {
+					fd.append('attachFiles', f);
+					fd.append('lastModified', f.lastModified);
+				});
+				
+				try {
+				  const resp = await fetch(postFormEl.value.action, {
+					method: 'POST',
+					body: fd
+				  });
+				
+				  if (resp.ok) {
+					const data = await resp.json();
+					const boardCate = data.boardCate;
+					const postId    = data.postId;
+					window.location.href = `/board/${boardCate}/post?postId=${postId}`;
+				  } else {
+					console.error('업로드 실패(HTTP):', resp.status);
+				  }
+				} catch (err) {
+				console.error('업로드 실패:', err);
+				}
+			};
+		
+			// fn_resetPost(): 원본과 동일
+			const fn_resetPost = () => {
+				postFormEl.value?.reset();
+				// 체크박스는 reset 후 DOM과 상태를 맞춰준다.
+				form.boardCd = 'AB010';
+				form.hiddenYn = false;
+				form.cmtYn = true;
+				form.postTitle = '';
+				form.postContent = '';
+				attachFiles.value = [];
+				renderList();
+			};
+		
+			// 초기 렌더(원본과 동일하게 호출만 유지)
+			renderList();
+		
+			return {
+				postFormEl, tempAttachInput,
+				form,
+				attachFiles, fileKey, removeFile,
+				dedupe, renderList,
+				fn_activateAttachFiles,
+				fn_addAttachFiles,
+				fn_submitPost,
+				fn_resetPost
+			};
+		}
+    }).mount('#app');
+  </script>
+</div>
+</html>

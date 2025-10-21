@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/default}">
+<div layout:fragment="content" style="text-align: start !important">
+	<h3 class="mb-3">자유게시글 수정</h3>
+
+	<div class="post-writer card shadow-sm">
+		<div class="card-body">
+			<div>
+				<!-- 검색박스 공간만큼 비워둘 2행 -->
+			</div>
+			<div>
+				<!-- 게시글 작성 폼이 위치할 3행 -->
+				<div>
+					<!-- 글 등록버튼(상단) 만큼 비워둘 공간 -->
+				</div>
+				<div>
+					<!-- 게시글 목록 -->
+					<form id="postForm" method="post" th:action="@{/board/post/update}" enctype="multipart/form-data">
+						<input type="hidden" id="postId" name="postId" th:value="${post.postId}" />
+
+						<div class="mb-3 d-flex flex-row gap-3 align-items-center">
+							<div class="form-attr gap-4" style="padding-left: 45px">
+								<div class="d-flex flex-column gap-1">
+									<label for="boardCd" class="form-label text-subtitle">게시판 선택: <select id="boardCd" name="boardCd"
+										class="form-select form-select-sm" required>
+											<option value="AB010"
+												th:selected="${post.boardCd} == 'AB010'">자유</option>
+											<option value="AB020"
+												th:selected="${post.boardCd} == 'AB020'">유머</option>
+									</select>
+									</label>
+								</div>
+
+								<div class="d-flex flex-column gap-1">
+									<label class="form-label"
+										style="padding-left: 1.8em; margin-bottom: 0;">글 설정:</label>
+									<div class="d-flex flex-row">
+										<div class="form-check d-flex flex-column">
+											<label>
+												<input type="checkbox" id="hiddenYn" name="hiddenYn" value="Y" style="" th:checked="${post.hiddenYn} == 'Y'" /> 비공개
+											</label>
+										</div>
+										<div class="form-check d-flex flex-column">
+											<label>
+											<input type="checkbox" id="cmtYn" name="cmtYn" value="Y" style="" th:checked="${post.cmtYn} == 'Y'" /> 댓글허용
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div class="form-label">
+								<label for="postTitle" class="form-label text-end" style="width: 80px;">
+									제목: 
+								</label>
+							</div>
+							<input type="text" id="postTitle" name="postTitle" class="form-control" th:value="${post.postTitle}" />
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div class="form-label">
+								<label for="postContent" class="form-label text-end" style="width: 80px;">
+									내용: 
+								</label>
+							</div>
+							<textarea id="postContent" name="postContent"
+								class="form-control" rows="10" th:text="${post.postContent}">
+							</textarea>
+						</div>
+
+						<div class="form-attr mb-3 gap-4">
+							<div class="form-label">
+								<label for="attachFiles" class="form-label text-end" style="width: 80px;">
+									첨부파일: 
+								</label>
+							</div>
+
+							<div class="d-flex flex-column gap-1 w-100">
+								<div>
+									<input type="hidden" id="postAttachGrpId" name="attachGrpId" th:value="${post.attachGrpId}" /> 
+									<input type="button" id="fakeAttachFiles" value="파일추가" class="btn btn-outline-warning btn-sm" onclick="fn_activateAttachFiles()" /> 
+									<input type="file" id="tempAttachFiles" onchange="fn_addAttachFiles(this)" multiple hidden />
+
+									<div class="div-attach-file-list border rounded p-2 w-100" id="divAttachFilesList" style="min-height: 40px;">
+										<div id="attachApp" v-cloak>
+											<ul class="ul-attach-file-list mb-0" id="ulAttachFilesList">
+												<li v-if="files.length === 0">선택된 파일이 없습니다.</li>
+
+												<li v-for="(f, idx) in files" 
+													:key="f.key"
+													:data-type="f.seq ? 'old' : 'new'" 
+													:data-seq="f.seq"
+													class="d-flex justify-content-between align-items-center">
+													<span class="card-subtitle">
+														<i class="ti ti-menu-2 fs-5"></i>
+														&nbsp; {{ f.name }} ({{f.size }}Bytes)
+													</span>
+													<input type="button" class="btn btn-sm btn-outline-danger" value="삭제" @click="removeAt(idx, f.seq)" />
+												</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="text-right">
+							<!-- 글 등록버튼 -->
+							<input type="button" value="등록" class="btn btn-sm btn-outline-secondary" onclick="fn_submitPost()" /> 
+							<input type="button" value="초기화" class="btn btn-sm btn-outline-primary" onclick="fn_resetPost()" />
+						</div>
+					</form>
+
+					<div>
+						<!-- 페이지네이션 만큼 비워둘 공간 -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 서버 값 안전 주입 -->
+	<script th:inline="javascript">
+	const postForm = document.getElementById('postForm');
+	const postId = document.getElementById("postId");
+	const hiddenYn = document.getElementById("hiddenYn");
+	const cmtYn = document.getElementById("cmtYn");
+	const boardCd = document.getElementById('boardCd');
+	const postTitle = document.getElementById('postTitle');
+	const postContent = document.getElementById('postContent');
+	const postAttachGrpId = document.getElementById('postAttachGrpId');
+	const tempAttachInput = document.getElementById('tempAttachFiles');
+	
+	// 서버 값: 어떤 형식이 와도 '배열'로 만든다
+	const __raw = /*[[${jsonAttachList}]]*/ '[]';
+	
+	function safeToArray(any) {
+		if (Array.isArray(any)) return any;
+		if (any == null || any === '') return [];
+		if (typeof any === 'string') {
+			try { 
+				const parsed = JSON.parse(any);
+				return Array.isArray(parsed) ? parsed : [];
+			} catch { return []; }
+		}
+		return [];
+	}
+	
+	const __list = safeToArray(__raw);
+	
+	const isOldVo = v =>
+	  v && typeof v === 'object' &&
+	  'fileOrgNm' in v && 'fileSize' in v && 'lastModified' in v;
+	
+	const makeKey = (name, size, lastModified) => `${name}__${size}__${lastModified}`;
+	
+	const normalizeOld = vo => ({
+		name: String(vo.fileOrgNm ?? ''),
+		size: Number(vo.fileSize ?? 0),
+		lastModified: Number(vo.lastModified ?? 0),
+		seq: vo.fileSeq,
+		key: makeKey(String(vo.fileOrgNm ?? ''), Number(vo.fileSize ?? 0), Number(vo.lastModified ?? 0))
+	});
+	
+	const normalizeNew = file => ({
+		name: file.name,
+		size: file.size,
+		lastModified: file.lastModified,
+		file,
+		seq: undefined,
+		key: makeKey(file.name, file.size, file.lastModified)
+	});
+	
+	(function () {
+		const { createApp, ref } = Vue;
+		
+		// 초기값: 객체만 남기고 정규화
+		const initial = __list.filter(isOldVo).map(normalizeOld);
+		
+		const app = createApp({
+			setup() {
+				const files = ref(initial.slice());
+				const deletedSeq = ref(new Set());
+				
+				const dedupeByKey = (arr) => {
+					const seen = new Set();
+					const out = [];
+					for (const f of arr) {
+					  const k = f.key || makeKey(f.name, f.size, f.lastModified);
+					  if (seen.has(k)) continue;
+					  seen.add(k);
+					  if (!f.key) f.key = k;
+					  out.push(f);
+					}
+					return out;
+				};
+				
+				const addFromInput = (inputEl) => {
+					// 파일이 없으면 조용히 종료
+					if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+					const selected = Array.from(inputEl.files).map(normalizeNew);
+					files.value = dedupeByKey([...files.value, ...selected]);
+					inputEl.value = '';
+				};
+				
+				const removeAt = (idx, seq) => {
+					const removed = files.value.splice(idx, 1)[0];
+					if (seq != null) deletedSeq.value.add(seq);
+				};
+				
+				const reset = () => {
+					files.value = initial.slice();
+					deletedSeq.value = new Set();
+				};
+				
+				// 기존 onclick 계약 유지
+				window.fn_activateAttachFiles = () => tempAttachInput.click();
+				window.fn_addAttachFiles = (input) => addFromInput(input);
+				window.fn_resetPost = () => { postForm.reset(); reset(); };
+				
+				window.fn_submitPost = async () => {
+					const formData = new FormData();
+					formData.append('boardCd', boardCd.value);
+					formData.append('postId', postId.value);
+					console.debug(cmtYn.value == 'Y' ? 'Y' : 'N');
+					console.debug(cmtYn.checked);
+					formData.append('cmtYn', cmtYn.checked == true ? 'Y' : 'N');
+					formData.append('hiddenYn', hiddenYn.checked == true ? 'Y' : 'N');
+					formData.append('postTitle', postTitle.value);
+					formData.append('postContent', postContent.value);
+					formData.append('attachGrpId', postAttachGrpId.value);
+					console.debug(formData);
+					files.value.forEach(f => {
+						if (!f.seq) {
+							formData.append('attachFiles', f.file ?? new File([], f.name));
+							formData.append('lastModified', f.lastModified);
+						}
+					});
+					for (const seq of deletedSeq.value) formData.append('deleteFileSeq', seq);
+					
+					try {
+						const resp = await fetch(postForm.getAttribute('action'), { method: 'POST', body: formData });
+						if (resp.ok) {
+							const data = await resp.json();
+							location.href = `/board/${data.boardCate}/post?postId=${postId.value}`;
+						}
+					} catch (e) {
+						console.error('업로드 실패:', e);
+					}
+				};
+				
+				return { files, removeAt };
+			}
+		});
+		
+		app.mount('#attachApp');
+	})();
+	</script>
+
+</div>
+</html>

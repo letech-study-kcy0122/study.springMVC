@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default}">
+<div layout:fragment="content">
+	<link rel="stylesheet" href="/css/styleUser.css" />
+	<div>
+		<h5>사용자 상세 조회</h5>
+	</div>
+	<div id="app" v-cloak>
+		<table class="table">
+			<tr><th colspan="2" class="text-center card-title">회원 정보</th></tr>
+			<tr>
+				<th class="text-end">프로필 사진 <br/>
+					<input type="button" value="이미지 저장" class="btn btn-outline-warning btn-sm"
+						@click="fn_downloadProfileImg"
+						:disabled="!user.profileGrpId"
+					/>
+				</th>
+				<td class="kcy-td-detail"><img class="image-preview" th:src="${userProfileImgSrc }" alt="프로필_이미지"/></td>
+			</tr>
+			<tr><th class="text-end">사용자 ID</th><td class="kcy-td-detail"><strong>{{user.userId }}</strong></td></tr>
+			<tr><th class="text-end">사용자 이름</th><td class="kcy-td-detail"><strong>{{user.userNm }}</strong></td></tr>
+	   		<tr><th class="text-end">사용자 주민번호</th>
+				<td class="kcy-td-detail">
+					<span th:if="${user.regno1 != null and user.regno2 != null}">
+						<strong th:text="${user.regno1 + '-' + user.regno2}">000000-0000000</strong>
+					</span>
+				</td>
+			</tr>
+			<tr><th class="text-end">사용자 권한</th>
+				<td class="kcy-td-detail">
+					<!--  -->
+					<span th:each="role,roleStat : ${userRoles.![userRole]}">
+						<span th:each="code,codeStat : ${cmmnCodeList}">
+							<span th:if="${role == code.cmmnCd}">
+								<strong th:text="${code.cmmnNm}">권한명</strong>
+								<span th:if="${!roleStat.last}"> / </span>
+							</span>
+						</span>
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="d-flex flex-row bd-highlight">
+					<div class="p-2 bd-highlight row-hover" @click="fn_updatePage"><span style="cursor:pointer;">수정</span></div>
+					<div class="p-2 bd-highlight row-hover" @click="fn_deleteUser"><span style="cursor:pointer;">삭제</span></div>
+					<div class="p-2 bd-highlight row-hover" @click="fn_listPage"><span style="cursor:pointer;">목록</span></div>
+				</td>
+			</tr>
+		</table>
+	</div>
+    <script th:inline="javascript">
+	const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+		setup() {
+			const root = ref(null);
+			const contextPath = '';
+			const user = ref(/*[[${user}]]*/);
+			const userRoles = ref(/*[[${userRoles}]]*/[]);
+			const cmmnCodeList = ref(/*[[${cmmnCodeList}]]*/[]);
+			const userProfileImgSrc = ref(/*[[${userProfileImgSrc}]]*/);
+			const username = ref(/*[[${username}]]*/);
+			
+			const fn_updatePage = () => {
+				const uri = `${encodeURIComponent(contextPath)}/cmmn/user/update?userId=${encodeURIComponent(user.value.userId)}`;
+				window.location.href = uri;
+			}
+			
+			const fn_listPage = () => {
+				const uri = `${encodeURIComponent(contextPath)}/cmmn/user/list`;
+				window.location.href = uri;
+			}
+			
+			const fn_deleteUser = () => {
+				const uri = `${encodeURIComponent(contextPath)}/cmmn/user/delete?userId=${encodeURIComponent(user.value.userId)}`;
+				window.location.href = uri;
+			}
+			
+ 			const fn_downloadProfileImg = () => {
+				const profileGrpId = user.value.profileGrpId;
+				if(profileGrpId !== null) {
+					location.href = `${encodeURIComponent(contextPath)}/cmmn/user/profile-img/select?profileGrpId=${encodeURIComponent(profileGrpId)}`;
+				} else {
+					return;
+				}
+			}
+			
+			onMounted(() => {
+				const $slotList = $("row-hover");
+				$slotList.each(function(idx, slot) {
+					const $slot = $(slot);
+					if(idx % 2 == 0) { $slot.addClass("row-odd"); }
+					else { $slot.addClass("row-even"); }
+					console.debug($slot);
+				});
+				
+				const s = userRoles.value;
+				console.debug(s);
+			});
+			
+			return {
+				root
+				, user
+				, userRoles
+				, cmmnCodeList
+				, userProfileImgSrc
+				, username
+				, fn_updatePage
+				, fn_listPage
+				, fn_deleteUser
+				, fn_downloadProfileImg
+			};
+		}
+    }).mount('#app');
+    </script>
+</div>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<!-- Boot에서는 필요없다. 자동으로 .properties 파일들을 병합해서 읽고 처리.  `application[-{profile}].properties`-->
+	<context:property-placeholder location="classpath:application.properties, classpath:application-${spring.profiles.active}.properties"/>
+	
+	<!-- Boot에서는 클래스패스 루트의 message.properties 파일을 찾기 때문에, 이처럼 bean으로 등록해줄 필요가 없다. 속성값만 .properties에 저장 -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>classpath:/message/message-common</value>
+			</list>
+		</property>
+		<property name="cacheSeconds">
+			<value>60</value>
+		</property>
+	</bean>
+		
+</beans>
